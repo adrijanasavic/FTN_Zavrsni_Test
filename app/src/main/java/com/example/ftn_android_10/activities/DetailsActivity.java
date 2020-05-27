@@ -77,7 +77,6 @@ public class DetailsActivity extends AppCompatActivity {
 
     private DatePicker datumPicker;
     private TimePicker vremePicker;
-//    private RatingBar ocena;
 
     public static final String DATE_FORMAT = "HH:mm";
 
@@ -338,7 +337,7 @@ public class DetailsActivity extends AppCompatActivity {
             adapterLista.removeAll();
             adapterLista.notifyDataSetChanged();
 
-            String tekstNotifikacije = "Lista filmova je obrisana!!!";
+            String tekstNotifikacije = "Lista mojih filmova je obrisana!!!";
 
             boolean toast = prefs.getBoolean( getString( R.string.toast_key ), false );
             boolean notif = prefs.getBoolean( getString( R.string.notif_key ), false );
@@ -389,7 +388,7 @@ public class DetailsActivity extends AppCompatActivity {
                 switch (i) {
                     case 0:
                         title = "Moji filmova";
-                        // TODO: startActivity( new Intent( DetailsActivity.this, PregledSvihPogledanihFilmova.class ) );
+                        startActivity( new Intent( DetailsActivity.this, PregledSvihPogledanihFilmova.class ) );
                         break;
 
                     case 1:

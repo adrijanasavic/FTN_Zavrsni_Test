@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements SearchAdapter.OnI
             adapterLista.removeAll();
             adapterLista.notifyDataSetChanged();
 
-            String tekstNotifikacije = "Lista filmova je obrisana";
+            String tekstNotifikacije = "Lista mojih filmova je obrisana!!!";
 
             boolean toast = prefs.getBoolean( getString( R.string.toast_key ), false );
             boolean notif = prefs.getBoolean( getString( R.string.notif_key ), false );
@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements SearchAdapter.OnI
                 switch (i) {
                     case 0:
                         title = "Moji filmova";
-                        //startActivity( new Intent( MainActivity.this, PregledSvihPogledanihFilmova.class ) );
+                        startActivity( new Intent( MainActivity.this, PregledSvihPogledanihFilmova.class ) );
                         break;
 
                     case 1:
