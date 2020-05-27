@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 
-import com.example.ftn_android_10.MainActivity;
+import com.example.ftn_android_10.activities.MainActivity;
 import com.example.ftn_android_10.R;
 
 import java.io.IOException;
