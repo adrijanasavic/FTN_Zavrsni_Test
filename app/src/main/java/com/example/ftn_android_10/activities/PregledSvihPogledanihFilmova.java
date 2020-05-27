@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -37,6 +38,7 @@ import com.example.ftn_android_10.db.DatabaseHelper;
 import com.example.ftn_android_10.db.model.Filmovi;
 import com.example.ftn_android_10.dialog.AboutDialog;
 import com.example.ftn_android_10.settings.SettingsActivity;
+import com.example.ftn_android_10.tools.Tools;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
 import java.sql.SQLException;
@@ -150,6 +152,7 @@ public class PregledSvihPogledanihFilmova extends AppCompatActivity implements F
         startActivity( new Intent( this, MainActivity.class ) );
 
     }
+
 
     private void fillDataDrawer() {
         drawerItems = new ArrayList<>();
@@ -284,6 +287,14 @@ public class PregledSvihPogledanihFilmova extends AppCompatActivity implements F
     @Override
     public void onItemClick(int position) {
 
+        Intent i = new Intent( PregledSvihPogledanihFilmova.this, DetailsPogledaniActivity.class );
+        try {
+            i.putExtra( Tools.KEY, getDataBaseHelper().getFilmoviDao().queryForAll().get( position ).getmId() );
+            i.putExtra( "position", getDataBaseHelper().getFilmoviDao().queryForAll().get( position ).getmId() );
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        startActivity( i );
     }
 
     @Override
