@@ -6,8 +6,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NotificationCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -21,29 +21,45 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.DatePicker;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RatingBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.ftn_android_10.R;
 import com.example.ftn_android_10.adapters.FilmoviAdapter;
-import com.example.ftn_android_10.adapters.SearchAdapter;
 import com.example.ftn_android_10.db.DatabaseHelper;
 import com.example.ftn_android_10.db.model.Filmovi;
 import com.example.ftn_android_10.dialog.AboutDialog;
+import com.example.ftn_android_10.net.MyService;
+import com.example.ftn_android_10.net.model2.Detail;
 import com.example.ftn_android_10.settings.SettingsActivity;
+import com.example.ftn_android_10.tools.Tools;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.squareup.picasso.Picasso;
 
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static com.example.ftn_android_10.tools.Tools.NOTIF_CHANNEL_ID;
+import static com.example.ftn_android_10.net.MyServiceContract.APIKEY;
 
 public class DetailsActivity extends AppCompatActivity {
 
@@ -55,6 +71,15 @@ public class DetailsActivity extends AppCompatActivity {
     private RelativeLayout drawerPane;
 
     private FilmoviAdapter adapterLista;
+
+    private Detail detail;
+    private Filmovi film, films;
+
+    private DatePicker datumPicker;
+    private TimePicker vremePicker;
+//    private RatingBar ocena;
+
+    public static final String DATE_FORMAT = "HH:mm";
 
     private SharedPreferences prefs;
 
@@ -74,6 +99,235 @@ public class DetailsActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences( this );
     }
 
+    private void getDetail(String imdbKey) {
+        HashMap<String, String> queryParams = new HashMap<>();
+
+        queryParams.put( "apikey", APIKEY );
+        queryParams.put( "i", imdbKey );
+
+
+        Call<Detail> call = MyService.apiInterface().getMovieData( queryParams );
+        call.enqueue( new Callback<Detail>() {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onResponse(Call<Detail> call, Response<Detail> response) {
+                if (response.code() == 200) {
+                    Log.d( "REZ", "200" );
+
+                    detail = response.body();
+                    if (detail != null) {
+
+                        fillData();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Detail> call, Throwable t) {
+                Toast.makeText( DetailsActivity.this, t.getMessage(), Toast.LENGTH_SHORT ).show();
+            }
+        } );
+    }
+
+    public void fillData() {
+
+        ImageView image = findViewById( R.id.detalji_slika );
+        Picasso.with( DetailsActivity.this ).load( detail.getPoster() ).into( image );
+
+        TextView title = findViewById( R.id.detalji_naziv );
+        title.setText( detail.getTitle() );
+
+        TextView year = findViewById( R.id.detalji_godina );
+        year.setText( "(" + detail.getYear() + ")" );
+
+        TextView glumci = findViewById( R.id.detalji_glumci );
+        glumci.setText( detail.getActors() );
+
+        TextView runtime = findViewById( R.id.detalji_runtime );
+        runtime.setText( detail.getRuntime() );
+
+        TextView genre = findViewById( R.id.detalji_zanr );
+        genre.setText( detail.getGenre() );
+
+        TextView language = findViewById( R.id.detalji_jezik );
+        language.setText( detail.getLanguage() );
+
+        TextView plot = findViewById( R.id.detalji_plot );
+        plot.setText( detail.getPlot() );
+
+        TextView drzava = findViewById( R.id.detalji_drzava );
+        drzava.setText( detail.getCountry() );
+
+        TextView awards = findViewById( R.id.detalji_awards );
+        awards.setText( detail.getAwards() );
+
+        TextView rezija = findViewById( R.id.detalji_rezija );
+        rezija.setText( detail.getDirector() );
+
+        TextView buzdet = findViewById( R.id.detalji_budzet );
+        buzdet.setText( detail.getBoxOffice() );
+
+        RatingBar ratingBar = findViewById( R.id.rating_bar );
+        ratingBar.setRating( 1 );
+
+        vremePicker = findViewById( R.id.details_timePicker );
+        datumPicker = findViewById( R.id.details_dataPicker );
+
+        film = new Filmovi();
+        film.setmNaziv( detail.getTitle() );
+        film.setmGodina( "(" + detail.getYear() + ")" );
+        film.setmGlumac( detail.getActors() );
+        film.setmImage( detail.getPoster() );
+        film.setmImdbId( detail.getImdbID() );
+        film.setmJezik( detail.getLanguage() );
+        film.setmDrzava( detail.getCountry() );
+        film.setmAwards( detail.getAwards() );
+        film.setmRezija( detail.getDirector() );
+        film.setmBudzet( detail.getBoxOffice() );
+
+        film.setmVreme( detail.getRuntime() );
+        film.setmZanr( detail.getGenre() );
+        film.setmPlot( detail.getPlot() );
+        film.setmRating( ratingBar.getRating() );
+        film.setmDate( (datumPicker.getDayOfMonth()) + "." + (datumPicker.getMonth()) + "." + datumPicker.getYear() + "." );
+
+        String vreme = vremePicker.getCurrentHour() + ":" + vremePicker.getCurrentMinute() + " h";
+
+        film.setmTime( vreme );
+
+        try {
+            getDataBaseHelper().getFilmoviDao().create( film );
+
+            String tekstNotifikacije = film.getmNaziv() + " je uspesno dodat u listu  " + "* Moji filmovi * " + "!";
+
+            boolean toast = prefs.getBoolean( getString( R.string.toast_key ), false );
+            boolean notif = prefs.getBoolean( getString( R.string.notif_key ), false );
+
+
+            if (toast) {
+                Toast.makeText( DetailsActivity.this, tekstNotifikacije, Toast.LENGTH_LONG ).show();
+
+            }
+
+            if (notif) {
+                NotificationManager notificationManager = (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
+                NotificationCompat.Builder builder = new NotificationCompat.Builder( DetailsActivity.this, NOTIF_CHANNEL_ID );
+                builder.setSmallIcon( android.R.drawable.ic_menu_delete );
+                builder.setContentTitle( "Notifikacija" );
+                builder.setContentText( tekstNotifikacije );
+
+                Bitmap bitmap = BitmapFactory.decodeResource( getResources(), R.mipmap.ic_launcher_foreground );
+
+                builder.setLargeIcon( bitmap );
+                notificationManager.notify( 1, builder.build() );
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+//        Intent i = new Intent( DetailsActivity.this, MainActivity.class );
+//        startActivity( i );
+
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        RatingBar ratingBar = findViewById( R.id.rating_bar );
+
+        int id = getIntent().getExtras().getInt( "id", 0 );
+        if (id == 0) {
+            film.setmRating( ratingBar.getRating() );
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                film.setmTime( getCurrentTime() );
+
+            }
+            try {
+                getDataBaseHelper().getFilmoviDao().update( film );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            films.setmRating( ratingBar.getRating() );
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                film.setmTime( getCurrentTime() );
+            }
+            try {
+                getDataBaseHelper().getFilmoviDao().update( films );
+
+            } catch (Exception e) {
+                e.printStackTrace();
+
+            }
+
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fillDetails();
+
+    }
+
+    public void fillDetails() {
+
+        setTitle( "Detalji Filma" );
+
+        String imdbKey = getIntent().getStringExtra( Tools.KEY );
+        if (imdbKey != null) {
+            getDetail( imdbKey );
+        } else {
+            int id = getIntent().getIntExtra( "id", -1 );
+            try {
+
+                films = getDataBaseHelper().getFilmoviDao().queryForId( id );
+
+                TextView title = findViewById( R.id.detalji_naziv );
+                title.setText( films.getmNaziv() );
+
+                TextView godina = this.findViewById( R.id.detalji_godina );
+                godina.setText( films.getmGodina() );
+                TextView trajanje = findViewById( R.id.detalji_runtime );
+                trajanje.setText( films.getmVreme() );
+                TextView zanr = findViewById( R.id.detalji_zanr );
+                zanr.setText( films.getmZanr() );
+                TextView jezik = findViewById( R.id.detalji_jezik );
+                jezik.setText( films.getmJezik() );
+                TextView awards = findViewById( R.id.detalji_awards );
+                awards.setText( films.getmAwards() );
+                TextView plot = findViewById( R.id.detalji_plot );
+                plot.setText( films.getmPlot() );
+
+                RatingBar ratingBar = findViewById( R.id.rating_bar );
+                ratingBar.setRating( films.getmRating() );
+
+                vremePicker = findViewById( R.id.details_timePicker );
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    String vreme = vremePicker.getCurrentHour() + ":" + vremePicker.getCurrentMinute() + " h";
+                }
+                ImageView image = findViewById( R.id.detalji_slika );
+
+                Picasso.with( DetailsActivity.this ).load( films.getmImage() ).into( image );
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public static String getCurrentTime() {
+
+        DateFormat dateFormat = new SimpleDateFormat( DATE_FORMAT );
+        Date date = new Date();
+
+        return dateFormat.format( date );
+    }
+
     public void deleteFilmove() {
 
         try {
@@ -84,7 +338,7 @@ public class DetailsActivity extends AppCompatActivity {
             adapterLista.removeAll();
             adapterLista.notifyDataSetChanged();
 
-            String tekstNotifikacije = "Lista filmova je obrisana";
+            String tekstNotifikacije = "Lista filmova je obrisana!!!";
 
             boolean toast = prefs.getBoolean( getString( R.string.toast_key ), false );
             boolean notif = prefs.getBoolean( getString( R.string.notif_key ), false );
@@ -242,5 +496,4 @@ public class DetailsActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel( channel );
         }
     }
-
 }

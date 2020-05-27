@@ -20,7 +20,8 @@ public class Filmovi {
     public static final String FIELD_NAME_AWARDS = "awards";
     public static final String FIELD_NAME_PLOT = "plot";
     public static final String FIELD_NAME_DRZAVA = "drzva";
-
+    public static final String FIELD_NAME_REZIJA = "rezija";
+    public static final String FIELD_NAME_BUDZET = "budzet";
 
     public static final String FIELD_NAME_RATING = "rating";
     public static final String FIELD_NAME_TIME = "time";
@@ -63,6 +64,12 @@ public class Filmovi {
     @DatabaseField(columnName = FIELD_NAME_DRZAVA)
     private String mDrzava;
 
+    @DatabaseField(columnName = FIELD_NAME_REZIJA)
+    private String mRezija;
+
+    @DatabaseField(columnName = FIELD_NAME_BUDZET)
+    private String mBudzet;
+
     @DatabaseField(columnName = FIELD_NAME_RATING)
     private Float mRating;
 
@@ -70,7 +77,7 @@ public class Filmovi {
     private String mTime;
 
     @DatabaseField(columnName = FIELD_NAME_DATE)
-    private int mDate;
+    private String mDate;
 
     public Filmovi() {
     }
@@ -171,6 +178,22 @@ public class Filmovi {
         this.mDrzava = mDrzava;
     }
 
+    public String getmRezija() {
+        return mRezija;
+    }
+
+    public void setmRezija(String mRezija) {
+        this.mRezija = mRezija;
+    }
+
+    public String getmBudzet() {
+        return mBudzet;
+    }
+
+    public void setmBudzet(String mBudzet) {
+        this.mBudzet = mBudzet;
+    }
+
     public Float getmRating() {
         return mRating;
     }
@@ -187,11 +210,11 @@ public class Filmovi {
         this.mTime = mTime;
     }
 
-    public int getmDate() {
+    public String getmDate() {
         return mDate;
     }
 
-    public void setmDate(int mDate) {
+    public void setmDate(String mDate) {
         this.mDate = mDate;
     }
 }
