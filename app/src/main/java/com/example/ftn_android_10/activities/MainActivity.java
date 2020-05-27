@@ -329,5 +329,10 @@ public class MainActivity extends AppCompatActivity implements SearchAdapter.OnI
     @Override
     public void onItemClick(int position) {
 
+        Search movie = adapter.get( position );
+
+        Intent i = new Intent( this, DetailsActivity.class );
+        i.putExtra( KEY, movie.getImdbID() );
+        startActivity( i );
     }
 }
