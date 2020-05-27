@@ -4,17 +4,26 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -22,9 +31,23 @@ import android.widget.Toast;
 import com.example.ftn_android_10.R;
 import com.example.ftn_android_10.adapters.SearchAdapter;
 import com.example.ftn_android_10.dialog.AboutDialog;
+import com.example.ftn_android_10.net.MyService;
+import com.example.ftn_android_10.net.model1.Search;
+import com.example.ftn_android_10.net.model1.SearchResult;
 import com.example.ftn_android_10.settings.SettingsActivity;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.example.ftn_android_10.net.MyServiceContract.APIKEY;
+import static com.example.ftn_android_10.tools.Tools.KEY;
+import static com.example.ftn_android_10.tools.Tools.NOTIF_CHANNEL_ID;
 
 public class MainActivity extends AppCompatActivity implements SearchAdapter.OnItemClickListener {
 
@@ -35,6 +58,13 @@ public class MainActivity extends AppCompatActivity implements SearchAdapter.OnI
     private ActionBarDrawerToggle drawerToggle;
     private RelativeLayout drawerPane;
 
+    private RecyclerView.LayoutManager layoutManager;
+    private RecyclerView recyclerView;
+    private SearchAdapter adapter;
+
+    private ImageButton btnSearch;
+    private EditText movieName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
@@ -43,6 +73,69 @@ public class MainActivity extends AppCompatActivity implements SearchAdapter.OnI
         setupToolbar();
         fillDataDrawer();
         setupDrawer();
+
+        fillData();
+    }
+
+    private void getMovieByName(String name) {
+        Map<String, String> query = new HashMap<>();
+        query.put( "apikey", APIKEY );
+        query.put( "s", name.trim() );
+
+        Call<SearchResult> call = MyService.apiInterface().getMovieByName( query );
+        call.enqueue( new Callback<SearchResult>() {
+            @Override
+            public void onResponse(Call<SearchResult> call, Response<SearchResult> response) {
+
+                if (response.code() == 200) {
+                    try {
+                        SearchResult searches = response.body();
+
+                        ArrayList<Search> search = new ArrayList<>();
+
+                        for (Search e : searches.getSearch()) {
+
+                            if (e.getType().equals( "movie" ) || e.getType().equals( "series" )) {
+                                search.add( e );
+                            }
+                        }
+
+                        layoutManager = new LinearLayoutManager( MainActivity.this );
+                        recyclerView.setLayoutManager( layoutManager );
+
+                        adapter = new SearchAdapter( MainActivity.this, search, MainActivity.this );
+                        recyclerView.setAdapter( adapter );
+
+                        Toast.makeText( MainActivity.this, "Prikaz filmova.", Toast.LENGTH_SHORT ).show();
+
+                    } catch (NullPointerException e) {
+                        Toast.makeText( MainActivity.this, "Ne postoji film sa tim nazivom", Toast.LENGTH_SHORT ).show();
+                    }
+
+                } else {
+
+                    Toast.makeText( MainActivity.this, "Greska sa serverom", Toast.LENGTH_SHORT ).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SearchResult> call, Throwable t) {
+                Toast.makeText( MainActivity.this, t.getMessage(), Toast.LENGTH_SHORT ).show();
+            }
+        } );
+    }
+
+    public void fillData() {
+        btnSearch = findViewById( R.id.btn_search );
+        movieName = findViewById( R.id.ime_filma );
+        recyclerView = findViewById( R.id.rvList );
+
+        btnSearch.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getMovieByName( movieName.getText().toString().trim() );
+            }
+        } );
     }
 
     private void fillDataDrawer() {
@@ -86,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements SearchAdapter.OnI
                                 .setPositiveButton( "Da", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                       //TODO: deleteFilmove();
+                                        //TODO: deleteFilmove();
 
                                     }
                                 } ).setNegativeButton( "Odustani", null ).show();
